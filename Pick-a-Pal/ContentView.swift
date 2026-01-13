@@ -18,25 +18,35 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            /// List
-            List {
-                ForEach(names, id: \.description) { name in
-                    Text(name)
-                }
-            }
-            
-            /// TextField
-            TextField("Add a name", text: $textFieldString)
-                .autocorrectionDisabled()
-                .onSubmit {
-                    addName()
-                }
+            namesList
+            addNameTextField
         }
         .padding()
     }
     
+    // MARK: - ViewBuilder
+    
+    private var namesList: some View {
+        List {
+            ForEach(names, id: \.description) { name in
+                Text(name)
+            }
+        }
+    }
+    
+    private var addNameTextField: some View {
+        TextField("Add a name", text: $textFieldString)
+            .autocorrectionDisabled()
+            .onSubmit {
+                addName()
+            }
+    }
+    
     // MARK: - Private methods
     
+    /// Appends user input String to the names list
+    ///
+    /// Validation: it must not be empty
     private func addName() {
         guard !textFieldString.isEmpty else {
             return
