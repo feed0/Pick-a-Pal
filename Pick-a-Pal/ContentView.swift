@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var names: [String] = []
     @State private var textFieldString = ""
     @State private var pickedName = ""
+    @State private var shouldRemovePickedName: Bool = false
     
     // MARK: - Body
     
@@ -23,6 +24,7 @@ struct ContentView: View {
             namesList
             addNameTextField
             Divider()
+            removeNameToggle
             pickRandomNameButton
         }
         .padding()
@@ -52,6 +54,11 @@ struct ContentView: View {
             }
     }
 
+    private var removeNameToggle: some View {
+        Toggle("Remove picked name",
+               isOn: $shouldRemovePickedName)
+    }
+    
     private var pickRandomNameButton: some View {
         Button("Pick a random name") {
             handlePickRandomNameButton()
@@ -74,9 +81,20 @@ struct ContentView: View {
     /// Validates `names` list before choosing a random name
     ///
     /// IF names list is empty, THEN a suggestion message takes place
+    /// Also, IF toggle is on, all occurences (case insensitive) of the random name are removed from the `names` list
     private func handlePickRandomNameButton() {
         if let optionalRandomName = names.randomElement() {
+            
+            /// Pick a random name
             pickedName = optionalRandomName
+            
+            /// Remove all occurences of that random name IF toggle is on
+            if shouldRemovePickedName {
+                names.removeAll { name in
+                    name.lowercased() == optionalRandomName.lowercased()
+                }
+            }
+            
         } else {
             pickedName = "Empty names list! You can ADD SOME NAMES down there."
         }
