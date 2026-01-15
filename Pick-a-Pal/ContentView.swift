@@ -60,9 +60,15 @@ struct ContentView: View {
     }
     
     private var pickRandomNameButton: some View {
-        Button("Pick a random name") {
+        Button {
             handlePickRandomNameButton()
+        } label: {
+            Text("Pick a random name")
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
         }
+        .buttonStyle(.borderedProminent)
+        .font(.title2)
     }
     
     // MARK: - Private methods
