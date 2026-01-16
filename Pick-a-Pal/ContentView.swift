@@ -11,7 +11,7 @@ struct ContentView: View {
     
     // MARK: - Properties
     
-    @State private var names: [String] = []
+    @State private var names = [String]()
     @State private var textFieldString = ""
     @State private var pickedName = ""
     @State private var shouldRemovePickedName: Bool = false
@@ -20,6 +20,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
+            headerVStack
             pickedNameText
             namesList
             addNameTextField
@@ -32,10 +33,23 @@ struct ContentView: View {
     
     // MARK: - ViewBuilder
     
+    private var headerVStack: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "person.3.sequence.fill")
+                .foregroundStyle(.tint)
+                .symbolRenderingMode(.hierarchical)
+            
+            Text("Pick-a-Pal")
+        }
+        .font(.largeTitle)
+        .bold()
+    }
+    
     private var pickedNameText: some View {
-        Text(
-            !pickedName.isEmpty ? pickedName : "Pick a name!"
-        )
+        Text(!pickedName.isEmpty ? pickedName : "Pick a name!")
+            .font(.title2)
+            .bold()
+            .foregroundStyle(.tint)
     }
     
     private var namesList: some View {
@@ -44,6 +58,7 @@ struct ContentView: View {
                 Text(name)
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
     private var addNameTextField: some View {
