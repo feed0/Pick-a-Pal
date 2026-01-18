@@ -16,11 +16,25 @@ struct ContentView: View {
     @State private var pickedName = ""
     @State private var shouldRemovePickedName: Bool = false
     
+    @State private var alert: AlertType? = nil
+    
+    private enum AlertType: String {
+        case repeatedName = "You already listed that name!"
+        case emptyField = "You need to write a name first!"
+        
+        case noNamesToPick = "You need to add some names first!"
+    }
+    
     // MARK: - Body
     
     var body: some View {
-        VStack {
+        VStack(spacing: 16) {
             headerVStack
+
+            if let alert = alert {
+                alertText(alert.rawValue)
+            }
+
             pickedNameText
             namesList
             addNameTextField
@@ -28,7 +42,7 @@ struct ContentView: View {
             removeNameToggle
             pickRandomNameButton
         }
-        .padding()
+        .padding(16)
     }
     
     // MARK: - ViewBuilder
@@ -45,8 +59,18 @@ struct ContentView: View {
         .bold()
     }
     
+    private func alertText(_ alertString: String) -> some View {
+        Text(alertString)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .opacity(0.4))
+            .foregroundStyle(.red)
+    }
+    
     private var pickedNameText: some View {
-        Text(!pickedName.isEmpty ? pickedName : "Pick a name!")
+        Text(!pickedName.isEmpty ? "Pal: \(pickedName)!" : "Pick a name!")
             .font(.title2)
             .bold()
             .foregroundStyle(.tint)
@@ -65,10 +89,10 @@ struct ContentView: View {
         TextField("Add a name", text: $textFieldString)
             .autocorrectionDisabled()
             .onSubmit {
-                addName()
+                handleAddNameTextFieldSubmit()
             }
     }
-
+    
     private var removeNameToggle: some View {
         Toggle("Remove picked name",
                isOn: $shouldRemovePickedName)
@@ -90,11 +114,20 @@ struct ContentView: View {
     
     /// Appends user input String to the `names` list
     ///
-    /// Validation: IF `names` list is empty, THEN no name is added to the list
-    private func addName() {
+    /// - Validation: IF `names` list is empty, THEN no name is added to the list
+    /// - Validation: IF `$textFieldString` is already in `names` list, THEN show alert message
+    private func handleAddNameTextFieldSubmit() {
         guard !textFieldString.isEmpty else {
+            alert = .emptyField
             return
         }
+        
+        guard !names.description.lowercased().contains(textFieldString.lowercased()) else {
+            alert = .repeatedName
+            return
+        }
+        
+        alert = nil
         names.append(textFieldString)
         textFieldString = ""
     }
@@ -104,21 +137,25 @@ struct ContentView: View {
     /// IF names list is empty, THEN a suggestion message takes place
     /// Also, IF toggle is on, all occurences (case insensitive) of the random name are removed from the `names` list
     private func handlePickRandomNameButton() {
-        if let optionalRandomName = names.randomElement() {
-            
-            /// Pick a random name
-            pickedName = optionalRandomName
-            
-            /// Remove all occurences of that random name IF toggle is on
-            if shouldRemovePickedName {
-                names.removeAll { name in
-                    name.lowercased() == optionalRandomName.lowercased()
-                }
-            }
-            
-        } else {
-            pickedName = "Empty names list! You can ADD SOME NAMES down there."
+        
+        /// If `names` is empty update alertType
+        guard let optionalRandomName = names.randomElement() else {
+            alert = .noNamesToPick
+            return
         }
+        
+        alert = nil
+        
+        /// Pick a random name
+        pickedName = optionalRandomName
+        
+        /// Remove all occurences of that random name IF toggle is on
+        if shouldRemovePickedName {
+            names.removeAll { name in
+                name.lowercased() == optionalRandomName.lowercased()
+            }
+        }
+            
     }
 }
 
