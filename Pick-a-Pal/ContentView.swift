@@ -16,9 +16,9 @@ struct ContentView: View {
     @State private var pickedName = ""
     @State private var shouldRemovePickedName: Bool = false
     
-    @State private var alert: AlertType? = nil
+    @State private var alert: ContentViewAlertType? = nil
     
-    private enum AlertType: String {
+    private enum ContentViewAlertType: String {
         case repeatedName = "You already listed that name!"
         case emptyField = "You need to write a name first!"
         
