@@ -70,7 +70,7 @@ struct ContentView: View {
     }
     
     private var pickedNameText: some View {
-        Text(!pickedName.isEmpty ? "Pal: \(pickedName)!" : "Pick a name!")
+        Text(!pickedName.isEmpty ? "Pal: '\(pickedName)'!" : "Pick a name!")
             .font(.title2)
             .bold()
             .foregroundStyle(.tint)
@@ -117,18 +117,29 @@ struct ContentView: View {
     /// - Validation: IF `names` list is empty, THEN no name is added to the list
     /// - Validation: IF `$textFieldString` is already in `names` list, THEN show alert message
     private func handleAddNameTextFieldSubmit() {
-        guard !textFieldString.isEmpty else {
+        
+        /// Trim
+        let trimmedString = textFieldString.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        /// Empty string alert
+        guard !trimmedString.isEmpty else {
             alert = .emptyField
             return
         }
         
-        guard !names.description.lowercased().contains(textFieldString.lowercased()) else {
+        /// Repeated name alert
+        guard !names.description.lowercased().contains(trimmedString.lowercased()) else {
             alert = .repeatedName
             return
         }
         
+        /// Reset alerts
         alert = nil
-        names.append(textFieldString)
+        
+        /// Append
+        names.append(trimmedString)
+        
+        /// Reset field
         textFieldString = ""
     }
     
