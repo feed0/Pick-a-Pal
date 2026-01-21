@@ -11,20 +11,32 @@ struct ContentView: View {
     
     // MARK: - Properties
     
-    @State private var names = [String]()
-    @State private var textFieldString = ""
-    @State private var pickedName = ""
-    @State private var shouldRemovePickedName: Bool = false
-    
     @State private var alert: ContentViewAlertType? = nil
     
-    private enum ContentViewAlertType: String {
-        case repeatedName = "You already listed that name!"
-        case emptyField = "You need to write a name first!"
-        
-        case noNamesToPick = "You need to add some names first!"
-    }
+    @State private var pickedName = ""
     
+    @State private var currentNamesList = [String]()
+    @State private var savedNamesList = [String]()
+    
+    @State private var textFieldString = ""
+    
+    @State private var shouldRemovePickedName: Bool = false
+    
+    private enum ContentViewAlertType: String {
+        // MARK: Errors
+        case repeatedName = "You ALREADY listed that name!"
+        case emptyField = "You need to WRITE a name first!"
+        
+        case noNamesToPick = "You need to ADD some names first!"
+        
+        case savingEmptyList = "You are trying to SAVE an empty list!"
+        case loadingEmptyList = "You are trying to LOAD an empty list!"
+        
+        // MARK: Updates
+        case listSaved = "Your list has been SAVED!"
+        case listLoaded = "Your list has been LOADED!"
+    }
+        
     // MARK: - Body
     
     var body: some View {
@@ -32,7 +44,7 @@ struct ContentView: View {
             headerVStack
 
             if let alert = alert {
-                alertText(alert.rawValue)
+                alertText(alert)
             }
 
             pickedNameText
@@ -41,6 +53,11 @@ struct ContentView: View {
             Divider()
             removeNameToggle
             pickRandomNameButton
+            
+            HStack {
+                saveNamesListButton
+                loadNamesListButton
+            }
         }
         .padding(16)
     }
@@ -59,14 +76,22 @@ struct ContentView: View {
         .bold()
     }
     
-    private func alertText(_ alertString: String) -> some View {
-        Text(alertString)
+    @ViewBuilder
+    private func alertText(_ alert: ContentViewAlertType) -> some View {
+        let foregroundColour: Color = switch alert {
+            case .listLoaded, .listSaved:
+                .blue
+            default:
+                .red
+        }
+        
+        Text(alert.rawValue)
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .opacity(0.4))
-            .foregroundStyle(.red)
+            .foregroundStyle(foregroundColour)
     }
     
     private var pickedNameText: some View {
@@ -78,7 +103,7 @@ struct ContentView: View {
     
     private var namesList: some View {
         List {
-            ForEach(names, id: \.description) { name in
+            ForEach(currentNamesList, id: \.description) { name in
                 Text(name)
             }
         }
@@ -110,6 +135,21 @@ struct ContentView: View {
         .font(.title2)
     }
     
+    private var saveNamesListButton: some View {
+        Button("Save names") {
+            handleSaveNamesListButton()
+        }
+        .buttonStyle(.bordered)
+    }
+    
+    private var loadNamesListButton: some View {
+        Button("Load names") {
+            handleLoadNamesListButton()
+        }
+        .buttonStyle(.bordered)
+        
+    }
+    
     // MARK: - Private methods
     
     /// Appends user input String to the `names` list
@@ -128,7 +168,7 @@ struct ContentView: View {
         }
         
         /// Repeated name alert
-        guard !names.description.lowercased().contains(trimmedString.lowercased()) else {
+        guard !currentNamesList.description.lowercased().contains(trimmedString.lowercased()) else {
             alert = .repeatedName
             return
         }
@@ -137,7 +177,7 @@ struct ContentView: View {
         alert = nil
         
         /// Append
-        names.append(trimmedString)
+        currentNamesList.append(trimmedString)
         
         /// Reset field
         textFieldString = ""
@@ -150,7 +190,7 @@ struct ContentView: View {
     private func handlePickRandomNameButton() {
         
         /// If `names` is empty update alertType
-        guard let optionalRandomName = names.randomElement() else {
+        guard let optionalRandomName = currentNamesList.randomElement() else {
             alert = .noNamesToPick
             return
         }
@@ -162,11 +202,42 @@ struct ContentView: View {
         
         /// Remove all occurences of that random name IF toggle is on
         if shouldRemovePickedName {
-            names.removeAll { name in
+            currentNamesList.removeAll { name in
                 name.lowercased() == optionalRandomName.lowercased()
             }
         }
-            
+    }
+    
+    /// Saves the `currentNamesList` in `savedNamesList`
+    ///
+    /// IF `currentNamesList` is empty, THEN updates alert to an error
+    private func handleSaveNamesListButton() {
+        
+        /// Empty saved names list
+        guard !currentNamesList.isEmpty  else {
+            alert = .savingEmptyList
+            return
+        }
+        
+        savedNamesList = currentNamesList
+        
+        alert = .listSaved
+    }
+    
+    /// Loads the `savedNamesList` into the `currentdNamesList`
+    ///
+    /// IF `savedNamesList` is empty, THEN updates alert to an error
+    private func handleLoadNamesListButton() {
+        
+        /// Empty saved names list
+        guard !savedNamesList.isEmpty  else {
+            alert = .loadingEmptyList
+            return
+        }
+        
+        currentNamesList = savedNamesList
+        
+        alert = .listSaved
     }
 }
 
