@@ -43,20 +43,20 @@ struct ContentView: View {
     private var alertColor: Color {
         switch alert {
             default:
-                .red
+                    .red
         }
     }
-
+    
     // MARK: - Body
     
     var body: some View {
         VStack(spacing: 16) {
             headerVStack
-
+            
             if let alert = alert {
                 alertText(alert)
             }
-
+            
             pickedNameText
             namesList
             addNameTextField
@@ -144,7 +144,7 @@ struct ContentView: View {
         
         /// Trim
         let trimmedString = textFieldString.trimmingCharacters(in: .whitespacesAndNewlines)
-
+        
         /// Empty string alert
         guard !trimmedString.isEmpty else {
             setAlert(to: .emptyField)
@@ -193,7 +193,7 @@ struct ContentView: View {
     }
     
     private func pickRandomName() -> String? {
-
+        
         guard let optionalRandomPalName = palsList.randomElement()?.name else {
             
             /// If `names` is empty update alertType
