@@ -43,7 +43,7 @@ struct ContentView: View {
     private var alertColor: Color {
         switch alert {
             default:
-                    .red
+                .red
         }
     }
 
@@ -147,18 +147,17 @@ struct ContentView: View {
 
         /// Empty string alert
         guard !trimmedString.isEmpty else {
-            alert = .emptyField
+            setAlert(to: .emptyField)
             return
         }
         
         /// Repeated name alert
         guard !isRepeatedName(for: trimmedString) else {
-            alert = .repeatedName
+            setAlert(to: .repeatedName)
             return
         }
         
-        /// Reset alerts
-        alert = nil
+        resetAlert()
         
         /// Insert
         let newPal = PalModel(name: trimmedString)
@@ -198,12 +197,11 @@ struct ContentView: View {
         guard let optionalRandomPalName = palsList.randomElement()?.name else {
             
             /// If `names` is empty update alertType
-            alert = .noNamesToPick
+            setAlert(to: .noNamesToPick)
             return nil
         }
         
-        /// Reset alerts
-        alert = nil
+        resetAlert()
         
         /// Pick a random name
         return optionalRandomPalName
@@ -219,6 +217,20 @@ struct ContentView: View {
         /// Delete each occurence
         for pal in matchingPals {
             context.delete(pal)
+        }
+    }
+    
+    // MARK: Depth 3
+    
+    private func setAlert(to value: ContentViewAlertType) {
+        withAnimation(.spring(duration: 0.3)) {
+            alert = value
+        }
+    }
+    
+    private func resetAlert() {
+        withAnimation(.spring(duration: 0.3)) {
+            alert = nil
         }
     }
 }
