@@ -237,7 +237,7 @@ struct ContentView: View {
         
         currentNamesList = savedNamesList
         
-        alert = .listSaved
+        alert = .listLoaded
     }
 }
 
