@@ -18,7 +18,7 @@ struct ContentView: View {
     
     @State private var alert: ContentViewAlertType? = nil
     
-    @State private var pickedName = ""
+    @State private var pickedName: String? = nil
     
     @State private var textFieldString = ""
     
@@ -30,7 +30,16 @@ struct ContentView: View {
         case emptyField = "You need to WRITE a name first!"
         case noNamesToPick = "You need to ADD some names first!"
     }
-        
+    
+    // MARK: Computed fields
+    
+    private var pickedNameTextString: String {
+        guard let pickedName else {
+            return "Pick a name!"
+        }
+        return "Pal: \"\(pickedName)\"!"
+    }
+            
     // MARK: - Body
     
     var body: some View {
@@ -51,7 +60,7 @@ struct ContentView: View {
         .padding(16)
     }
     
-    // MARK: - ViewBuilder
+    // MARK: - Subviews
     
     private var headerVStack: some View {
         VStack(spacing: 8) {
@@ -82,7 +91,7 @@ struct ContentView: View {
     }
     
     private var pickedNameText: some View {
-        Text(!pickedName.isEmpty ? "Pal: '\(pickedName)'!" : "Pick a name!")
+        Text(pickedNameTextString)
             .font(.title2)
             .bold()
             .foregroundStyle(.tint)
@@ -164,20 +173,12 @@ struct ContentView: View {
     /// Also, IF toggle is on, all occurences (case insensitive) of the random name are removed from the `names` list
     private func handlePickRandomNameButton() {
         
-        /// If `names` is empty update alertType
-        guard let optionalRandomPal = palsList.randomElement() else {
-            alert = .noNamesToPick
-            pickedName = ""
-            return
-        }
-        
-        alert = nil
-        
-        /// Pick a random name
-        pickedName = optionalRandomPal.name
+        /// Pick an optional random name
+        pickedName = pickRandomName()
         
         /// Remove all occurences of that random name IF toggle is on
-        if shouldRemovePickedName {
+        if shouldRemovePickedName,
+           let pickedName {
             removeAllPals(matching: pickedName)
         }
     }
@@ -189,6 +190,22 @@ struct ContentView: View {
         palsList.contains {
             $0.name.lowercased() == name.lowercased()
         }
+    }
+    
+    private func pickRandomName() -> String? {
+
+        guard let optionalRandomPalName = palsList.randomElement()?.name else {
+            
+            /// If `names` is empty update alertType
+            alert = .noNamesToPick
+            return nil
+        }
+        
+        /// Reset alerts
+        alert = nil
+        
+        /// Pick a random name
+        return optionalRandomPalName
     }
     
     private func removeAllPals(matching name: String) {
