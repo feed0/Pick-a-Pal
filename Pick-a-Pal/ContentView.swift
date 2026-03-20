@@ -6,17 +6,19 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     
     // MARK: - Properties
     
+    @Environment(\.modelContext) private var context
+    
+    @Query(sort: \PalModel.name) private var palsList: [PalModel]
+    
     @State private var alert: ContentViewAlertType? = nil
     
     @State private var pickedName = ""
-    
-    @State private var currentNamesList = [String]()
-    @State private var savedNamesList = [String]()
     
     @State private var textFieldString = ""
     
@@ -26,15 +28,7 @@ struct ContentView: View {
         // MARK: Errors
         case repeatedName = "You ALREADY listed that name!"
         case emptyField = "You need to WRITE a name first!"
-        
         case noNamesToPick = "You need to ADD some names first!"
-        
-        case savingEmptyList = "You are trying to SAVE an empty list!"
-        case loadingEmptyList = "You are trying to LOAD an empty list!"
-        
-        // MARK: Updates
-        case listSaved = "Your list has been SAVED!"
-        case listLoaded = "Your list has been LOADED!"
     }
         
     // MARK: - Body
@@ -53,11 +47,6 @@ struct ContentView: View {
             Divider()
             removeNameToggle
             pickRandomNameButton
-            
-            HStack {
-                saveNamesListButton
-                loadNamesListButton
-            }
         }
         .padding(16)
     }
@@ -79,8 +68,6 @@ struct ContentView: View {
     @ViewBuilder
     private func alertText(_ alert: ContentViewAlertType) -> some View {
         let foregroundColour: Color = switch alert {
-            case .listLoaded, .listSaved:
-                .blue
             default:
                 .red
         }
@@ -103,8 +90,8 @@ struct ContentView: View {
     
     private var namesList: some View {
         List {
-            ForEach(currentNamesList, id: \.description) { name in
-                Text(name)
+            ForEach(palsList) { pal in
+                Text(pal.name)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -135,22 +122,9 @@ struct ContentView: View {
         .font(.title2)
     }
     
-    private var saveNamesListButton: some View {
-        Button("Save names") {
-            handleSaveNamesListButton()
-        }
-        .buttonStyle(.bordered)
-    }
-    
-    private var loadNamesListButton: some View {
-        Button("Load names") {
-            handleLoadNamesListButton()
-        }
-        .buttonStyle(.bordered)
-        
-    }
-    
     // MARK: - Private methods
+    
+    // MARK: Depth 1
     
     /// Appends user input String to the `names` list
     ///
@@ -168,7 +142,7 @@ struct ContentView: View {
         }
         
         /// Repeated name alert
-        guard !currentNamesList.description.lowercased().contains(trimmedString.lowercased()) else {
+        guard !isRepeatedName(for: trimmedString) else {
             alert = .repeatedName
             return
         }
@@ -176,8 +150,9 @@ struct ContentView: View {
         /// Reset alerts
         alert = nil
         
-        /// Append
-        currentNamesList.append(trimmedString)
+        /// Insert
+        let newPal = PalModel(name: trimmedString)
+        context.insert(newPal)
         
         /// Reset field
         textFieldString = ""
@@ -190,57 +165,50 @@ struct ContentView: View {
     private func handlePickRandomNameButton() {
         
         /// If `names` is empty update alertType
-        guard let optionalRandomName = currentNamesList.randomElement() else {
+        guard let optionalRandomPal = palsList.randomElement() else {
             alert = .noNamesToPick
+            pickedName = ""
             return
         }
         
         alert = nil
         
         /// Pick a random name
-        pickedName = optionalRandomName
+        pickedName = optionalRandomPal.name
         
         /// Remove all occurences of that random name IF toggle is on
         if shouldRemovePickedName {
-            currentNamesList.removeAll { name in
-                name.lowercased() == optionalRandomName.lowercased()
-            }
+            removeAllPals(matching: pickedName)
         }
     }
     
-    /// Saves the `currentNamesList` in `savedNamesList`
-    ///
-    /// IF `currentNamesList` is empty, THEN updates alert to an error
-    private func handleSaveNamesListButton() {
-        
-        /// Empty saved names list
-        guard !currentNamesList.isEmpty  else {
-            alert = .savingEmptyList
-            return
+    // MARK: Depth 2
+    
+    /// Checks if a given name is already in the `palsList`
+    private func isRepeatedName(for name: String) -> Bool {
+        palsList.contains {
+            $0.name.lowercased() == name.lowercased()
         }
-        
-        savedNamesList = currentNamesList
-        
-        alert = .listSaved
     }
     
-    /// Loads the `savedNamesList` into the `currentdNamesList`
-    ///
-    /// IF `savedNamesList` is empty, THEN updates alert to an error
-    private func handleLoadNamesListButton() {
+    private func removeAllPals(matching name: String) {
         
-        /// Empty saved names list
-        guard !savedNamesList.isEmpty  else {
-            alert = .loadingEmptyList
-            return
+        /// Find all occurences
+        let matchingPals = palsList.filter {
+            $0.name.lowercased() == name.lowercased()
         }
         
-        currentNamesList = savedNamesList
-        
-        alert = .listLoaded
+        /// Delete each occurence
+        for pal in matchingPals {
+            context.delete(pal)
+        }
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(
+            for: PalModel.self,
+            inMemory: true
+        )
 }
