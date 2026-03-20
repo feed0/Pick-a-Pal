@@ -39,7 +39,14 @@ struct ContentView: View {
         }
         return "Pal: \"\(pickedName)\"!"
     }
-            
+    
+    private var alertColor: Color {
+        switch alert {
+            default:
+                    .red
+        }
+    }
+
     // MARK: - Body
     
     var body: some View {
@@ -74,20 +81,14 @@ struct ContentView: View {
         .bold()
     }
     
-    @ViewBuilder
     private func alertText(_ alert: ContentViewAlertType) -> some View {
-        let foregroundColour: Color = switch alert {
-            default:
-                .red
-        }
-        
         Text(alert.rawValue)
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .opacity(0.4))
-            .foregroundStyle(foregroundColour)
+            .foregroundStyle(alertColor)
     }
     
     private var pickedNameText: some View {
